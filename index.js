@@ -1,55 +1,61 @@
 #!/usr/bin/evn node
 
 // index.js
-const { exec,execSync } = require('child_process');
-const { resolve } = require('path');
-const getPackageNames = new Promise((resolve,reject) => {
-exec('npm list --all', (err, stdout, stderr) => {
-  if (err) {
-    // node couldn't execute the command
-    return;
-  }
+import { execa } from 'execa';
+import { mkdirSync, readdirSync } from 'fs'
+import { Command } from 'commander';
 
-  // the *entire* stdout and stderr (buffered)
-  let packages = stdout.split('\n').filter(item=>!item.includes('deduped')).map(name=>{
-    name.trimEnd()
-    return name.substring(name.lastIndexOf(' ')+1)
-  }
-  )
-  packages.splice(0,1)
+const program = new Command();
 
- return resolve(packages)
-})
-})
+const getPackageNames = async () => {
+  const { stdout } = await execa('npm', ['list','--all']);
+  let packages = stdout.split('\n')
+    .filter(item=>!item.includes('deduped'))//去掉重复包
+    .map(name=> name.substring(name.lastIndexOf(' ')+1))//解析每行的包名称
+    .filter(packageName=>packageName.length>0)//去掉空行
+  packages.splice(0,1)//去掉首行路径字符串
+  return packages
+};
 
-getPackageNames.then(packages=>{
-  // console.log(packages)
-  // for(let i=0;i++;i<packages.length){
-    // console.log('1')
-    packages.forEach(package => {
-      // console.log(`npm pack ${package} --pack-destination="./node_modules_pack"`)
-         execSync(`npm pack ${package} --pack-destination="./node_modules_pack"`)
-    });
-    
- 
-  }
-)
+const packPackage= async(packageName)=>{
+  const {stdout} = await execa('npm',['pack',packageName,'--pack-destination=./node_modules_pack'])
+  return stdout
+}
 
-// exec('npm list --all', (err, stdout, stderr) => {
-//   if (err) {
-//     // node couldn't execute the command
-//     return;
-//   }
+const publishPackage = async(packageName)=>{
+  const {stdout} = await execa('npm',['publish','./node_modules_pack/'+packageName])
+  return stdout
+}
 
-//   // the *entire* stdout and stderr (buffered)
-//   let packages = stdout.split('\n').filter(item=>!item.includes('deduped')).map(name=>
-//     name.substring(name.lastIndexOf(' ')+1)
-//   )
-//   packages.splice(0,1)
-//   // console.log(packages)
-  
-// });
+program
+  .name('pack-util')
+  .description('Pack all installed package in ./node_modules, and publish to Nexus hosted Registry.')
+  .version('1.0.0');
 
-// .map(name=>
-//     name.match(/[\w\d\.@]+/)[0]
-//  )
+program
+  .command('pack')
+  .description('Pack all installed package in ./node_modules')
+  .action(() => {
+    getPackageNames().then(packages=>{
+      console.log(`Total ${packages.length} packages to be packed, please wait...`)
+      mkdirSync('./node_modules_pack',{recursive:true})
+      packages.forEach(packageName => {
+        packPackage(packageName).then(stdout=>console.log(stdout))
+      });
+    })
+  })
+
+program
+  .command('publish')
+  .description('Publish all packed packages in ./node_modules_pack')
+  .action(()=>{
+    const packages = readdirSync('./node_modules_pack')
+    // console.log('Publish all packed packages in ./node_modules_pack')
+    // console.log(packages)
+    packages.forEach(packageName => {
+      publishPackage(packageName).then(stdout=>console.log(stdout))
+    })
+  })
+
+
+program.parse();
