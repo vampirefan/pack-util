@@ -1,6 +1,5 @@
-#!/usr/bin/evn node
+#!/usr/bin/env node
 
-// index.js
 import { execa } from 'execa';
 import { mkdirSync, readdirSync } from 'fs'
 import { Command } from 'commander';
@@ -29,8 +28,8 @@ const publishPackage = async(packageName)=>{
 
 program
   .name('pack-util')
-  .description('Pack all installed package in ./node_modules, and publish to Nexus hosted Registry.')
-  .version('1.0.0');
+  .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
+  .version('1.0.4');
 
 program
   .command('pack')

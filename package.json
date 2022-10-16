@@ -1,10 +1,15 @@
 {
   "name": "@fanwang/pack-util",
-  "version": "1.0.0",
-  "description": "pack all installed node modules",
-  "main": "index.js",
-  "bin": {
-    "pack-util": "./index.js"
+  "version": "1.0.4",
+  "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
+  "bin":{
+    "pack-util": "./bin/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 12.9.0"
   },
   "type": "module",
   "scripts": {
@@ -16,7 +21,7 @@
   },
   "keywords": [],
   "author": "fanwang",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "commander": "^9.4.1",
     "execa": "^6.1.0"
