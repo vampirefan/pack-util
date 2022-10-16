@@ -2,7 +2,7 @@
   "name": "@fanwang/pack-util",
   "version": "1.0.4",
   "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
-  "bin":{
+  "bin": {
     "pack-util": "./bin/index.js"
   },
   "publishConfig": {
@@ -19,7 +19,11 @@
     "type": "git",
     "url": "https://gitee.com/vampirefan/pack-util.git"
   },
-  "keywords": [],
+  "keywords": [
+    "npm",
+    "pack",
+    "publish"
+  ],
   "author": "fanwang",
   "license": "MIT",
   "dependencies": {
