@@ -11,7 +11,7 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('1.0.6')
+  .version('1.0.7')
 
 const getPackageNames = async () => {
   const { stdout } = await execa('npm', ['list', '--all'])
@@ -51,7 +51,10 @@ const uploadPackage = async (packageName, options) => {
     path: `/service/rest/v1/components?repository=${repository}`,
     auth: `${username}:${password}`
   }, function (err, res) {
-    if (res.statusCode > 200 && res.statusCode < 300) console.log(packageName)
+    if (res.statusCode > 200 && res.statusCode < 300) {
+      // upload success
+      // console.log(packageName)
+    }
     else console.log(`${packageName} : UPLOAD ERROR -- code ${res.statusCode} -- ${res.statusMessage}`)
   })
 }
