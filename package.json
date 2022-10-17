@@ -1,6 +1,6 @@
 {
   "name": "@fanwang/pack-util",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
   "bin": {
     "pack-util": "./bin/index.js"
@@ -28,6 +28,8 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^9.4.1",
-    "execa": "^6.1.0"
+    "execa": "^6.1.0",
+    "form-data": "^4.0.0",
+    "inquirer": "^9.1.3"
   }
 }
