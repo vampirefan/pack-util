@@ -9,7 +9,7 @@ Pack all installed package in ./node_modules, and publish to Nexus hosted Regist
 npm install -g @fanwang/pack-util
 ```
 
-## Usage: pack-util [command]
+## Usage: pack-util [ pack | upload ]
 
 如果使用控制台命令的时候提示电脑禁止运行脚本,用管理员身份运行 cmd 或者 vscode 等然后在命令行输入:
 
@@ -17,16 +17,16 @@ npm install -g @fanwang/pack-util
 Set-ExecutionPolicy RemoteSigned
 ```
 
-### Pack all installed package in ./node_modules
-将所有 ./node_modules 中安装的包打包至 ./node_modules_pack
+### 将所有 ./node_modules 中安装的包打包至 ./node_modules_pack
+Pack all installed package in ./node_modules
 
 ```sh
 cd your_project
 pack-util pack
 ```
 
-### Upload all packed packages in ./node_modules_pack
-批量上传到 nexus 搭建的 npm 私服上
+### 批量上传到 nexus 搭建的 npm 私服上
+Upload all packed packages in ./node_modules_pack
 
 1. 将 ./node_modules_pack 文件夹和你的项目一起拷贝至内网，然后执行上传。
 
