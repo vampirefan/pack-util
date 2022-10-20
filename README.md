@@ -53,7 +53,15 @@ Input some params
 
 If there is upload error, delete other packages within the ./node_modules_pack, and upload again.
 
-###  ~~Publish all packed packages in ./node_modules_pack~~
+## ！！注意：在私网上安装 npm 包需要忽略对 peer 依赖！！
+
+```
+npm install --save --legacy-peer-deps
+```
+
+
+
+###  ~~批量发布至 Nexus 搭建的 npm 私服上，Publish all packed packages in ./node_modules_pack~~
 
 npm publish 会将解析打包的 package.json 中 publishConfig, 有的公共包如果设置了 { "registry": "https://registry.npmjs.org/" } , 会导致publish失败。[目前没法 Hack npm 的这种行为](https://stackoverflow.com/questions/66914753/override-registry-mentioned-in-publishconfig-of-package-json-through-command-lin)。
 
