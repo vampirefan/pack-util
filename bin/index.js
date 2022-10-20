@@ -11,25 +11,32 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('1.0.7')
+  .version('1.0.8')
 
 const getPackageNames = async () => {
   const { stdout } = await execa('npm', ['list', '--all'])
   let packages = stdout.split('\n')
   packages.splice(0, 1)//去掉首行路径字符串
-  return packages.filter(item => !item.includes('deduped'))//去掉重复包
+  packages = packages.filter(item => !item.includes('deduped')) // 去掉标记重复的包
     .map(name => {
       const nameRegex = /(\S+@.+)/g
       const nameParse = name.match(nameRegex)
       if (nameParse && nameParse.length > 0) return nameParse[0]
       else return ''
-    })//解析每行的包名称
-    .filter(packageName => packageName.length > 0)//去掉空行
+    }) // 解析每行的包名称
+    .filter(packageName => packageName.length > 0) // 去掉空行
+  return Array.from(new Set(packages)) // 去掉重复项
+  // return packages
 }
 
 // 利用 npm pack 在外网上对 dependencies 中的所有包打包。
+var index = 0
 const packPackage = async (packageName) => {
   const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
+  index++
+  process.stdout.clearLine()
+  process.stdout.cursorTo(0)
+  process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度
   return stdout
 }
 
@@ -44,18 +51,23 @@ const uploadPackage = async (packageName, options) => {
   const { host, repository, username, password } = options
   const form = new FormData()
   form.append('npm.asset', createReadStream('./node_modules_pack/' + packageName))
-  // return form
   form.submit({
     hostname: new URL(host).hostname,
     port: new URL(host).port,
     path: `/service/rest/v1/components?repository=${repository}`,
     auth: `${username}:${password}`
   }, function (err, res) {
-    if (res.statusCode > 200 && res.statusCode < 300) {
-      // upload success
-      // console.log(packageName)
+    if (err) console.log(err.message)
+    else {
+      if (res.statusCode > 200 && res.statusCode < 300) {
+        // upload success
+        index++
+        process.stdout.clearLine()
+        process.stdout.cursorTo(0)
+        process.stdout.write(`${index}: ${packageName}`) // 在同一行打印处理进度
+      }
+      else console.log(`${packageName} : UPLOAD ERROR -- code ${res.statusCode} -- ${res.statusMessage}`) //打印上传失败的包
     }
-    else console.log(`${packageName} : UPLOAD ERROR -- code ${res.statusCode} -- ${res.statusMessage}`)
   })
 }
 
@@ -66,11 +78,9 @@ program
     getPackageNames().then(packages => {
       console.log(`Total ${packages.length} packages to be packed, please wait...`)
       mkdirSync('./node_modules_pack', { recursive: true })
-      packages.forEach(packageName => {
-        packPackage(packageName).then(stdout => {
-          console.log(stdout)
-        })
-      })
+      for (const packageName of packages) {
+        packPackage(packageName)
+      }
     })
   })
 
@@ -106,9 +116,9 @@ program
     inquirer.prompt(questions).then(options => {
       const packages = readdirSync('./node_modules_pack')
       console.log(`Total ${packages.length} packages to be uploaded, please wait...`)
-      packages.forEach(packageName => {
+      for (const packageName of packages) {
         uploadPackage(packageName, options)
-      })
+      }
     })
   })
 

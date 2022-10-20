@@ -3,13 +3,19 @@
 
 Pack all installed package in ./node_modules, and publish to Nexus hosted Registry.
 
-## Install
+## ！！注意：在私网上安装 npm 包需要忽略对 peer 依赖！！
+
+```
+npm install --save --legacy-peer-deps
+```
+
+## 安装 (Install)
 
 ```sh
 npm install -g @fanwang/pack-util
 ```
 
-## Usage: pack-util [ pack | upload ]
+## 使用说明 (Usage: pack-util [ pack | upload ])
 
 如果使用控制台命令的时候提示电脑禁止运行脚本,用管理员身份运行 cmd 或者 vscode 等然后在命令行输入:
 
@@ -53,17 +59,13 @@ Input some params
 
 If there is upload error, delete other packages within the ./node_modules_pack, and upload again.
 
-## ！！注意：在私网上安装 npm 包需要忽略对 peer 依赖！！
-
-```
-npm install --save --legacy-peer-deps
-```
-
 
 
 ###  ~~批量发布至 Nexus 搭建的 npm 私服上，Publish all packed packages in ./node_modules_pack~~
+！！以下方式已弃用：
+原因是 npm publish 会将解析打包的 package.json 中 publishConfig, 有的公共包如果设置了 { "registry": "https://registry.npmjs.org/" } , 会导致publish失败。[目前没法 Hack npm 的这种行为](https://stackoverflow.com/questions/66914753/override-registry-mentioned-in-publishconfig-of-package-json-through-command-lin)。
 
-npm publish 会将解析打包的 package.json 中 publishConfig, 有的公共包如果设置了 { "registry": "https://registry.npmjs.org/" } , 会导致publish失败。[目前没法 Hack npm 的这种行为](https://stackoverflow.com/questions/66914753/override-registry-mentioned-in-publishconfig-of-package-json-through-command-lin)。
+将 ./node_modules_pack 文件夹和你的项目一起拷贝至内网，然后执行发布。
 
 copy node_modules_pack along with your project.
 
@@ -87,4 +89,4 @@ pack-util publish
 
 
 ## TODO
-- [] 实现打包和上传显示进度
+- [x] 实现打包和上传显示进度
