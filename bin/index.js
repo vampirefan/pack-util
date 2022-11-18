@@ -11,7 +11,7 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('1.0.8')
+  .version('1.1.0')
 
 const getPackageNames = async () => {
   const { stdout } = await execa('npm', ['list', '--all'])
@@ -34,6 +34,7 @@ var index = 0
 const packPackage = async (packageName) => {
   const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
   index++
+  // console.log(`${index}: ${stdout}`)
   process.stdout.clearLine()
   process.stdout.cursorTo(0)
   process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度

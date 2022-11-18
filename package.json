@@ -1,6 +1,6 @@
 {
   "name": "@fanwang/pack-util",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
   "bin": {
     "pack-util": "./bin/index.js"
