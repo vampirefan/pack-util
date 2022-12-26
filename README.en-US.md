@@ -32,13 +32,12 @@ pack-util upload
 ```
 
 2. Input some params  
-
-  ```
-  ? Please input your Nexus url host (eg: http://xx.xx.xx.xx:xxxx): http://xx.xx.xx.xx:8081/
-  ? Please input your Nexus npm repository (eg: localNpm):  localNpm
-  ? login to Nexus by username:  admin
-  ? password:  [hidden]
-  ```
+```
+? Please input your Nexus url host (eg: http://xx.xx.xx.xx:xxxx): http://xx.xx.xx.xx:8081/
+? Please input your Nexus npm repository (eg: localNpm):  localNpm
+? login to Nexus by username:  admin
+? password:  [hidden]
+```
 
 3. If there is upload error, delete other packages within the ./node_modules_pack, and upload again.  
 

@@ -42,13 +42,12 @@ pack-util upload
 ```
 
 2. 输入参数  
-
-  ```
-  ? Please input your Nexus url host (eg: http://xx.xx.xx.xx:xxxx): http://xx.xx.xx.xx:8081/
-  ? Please input your Nexus npm repository (eg: localNpm):  localNpm
-  ? login to Nexus by username:  admin
-  ? password:  [hidden]
-  ```
+```
+? Please input your Nexus url host (eg: http://xx.xx.xx.xx:xxxx): http://xx.xx.xx.xx:8081/
+? Please input your Nexus npm repository (eg: localNpm):  localNpm
+? login to Nexus by username:  admin
+? password:  [hidden]
+```
 
 3. 如果出现上传失败，删除其他成功上传的包，然后重新执行上传（也可以直接重试上传）。  
 
