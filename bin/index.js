@@ -12,7 +12,7 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('2.0.0')
+  .version('2.0.1')
 
 const getPackageInfos = async (packageManager) => {
   if (packageManager === 'yarn') {
@@ -52,14 +52,18 @@ const packPackage = async (packageName) => {
 const downloadPackage = async (packageUrl) => {
   const urlObj = url.parse(packageUrl)
   const filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
+  const fileStream = createWriteStream('./node_modules_pack/' + filename)
   await fetch(packageUrl).then(res => {
-    res.body.pipe(createWriteStream('./node_modules_pack/' + filename))
+    res.body.pipe(fileStream)
   })
-  index++
-  process.stdout.clearLine()
-  process.stdout.cursorTo(0)
-  process.stdout.write(`${index}: ${filename}`) // 在同一行打印处理进度
-  return filename
+  fileStream.on('finish', () => {
+    fileStream.close()
+    index++
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    process.stdout.write(`${index}: ${filename}`) // 在同一行打印处理进度
+    return filename
+  })
 }
 
 

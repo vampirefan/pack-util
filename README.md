@@ -21,8 +21,9 @@ npm install -g @fanwang/pack-util
 Set-ExecutionPolicy RemoteSigned
 ```
 
-建议先将源仓库设为阿里镜像仓库，这样打包速度更快：
+建议先将源仓库设为阿里镜像仓库，这样打包速度更快（yarn 和 npm 需要同时设置）：
 ```sh
+yarn config set registry https://registry.npmmirror.com  
 npm config set registry https://registry.npmmirror.com  
 ```
 
