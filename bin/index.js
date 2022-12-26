@@ -1,32 +1,40 @@
 #!/usr/bin/env node
-
 import { execa } from 'execa'
-import { mkdirSync, readdirSync, createReadStream } from 'fs'
+import { mkdirSync, readdirSync, createReadStream, createWriteStream, readFileSync } from 'fs'
 import { Command } from 'commander'
 import inquirer from 'inquirer'
 import FormData from 'form-data'
+import fetch from 'node-fetch'
+import url from 'url'
 
 const program = new Command()
 
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('1.0.8')
+  .version('2.0.1')
 
-const getPackageNames = async () => {
-  const { stdout } = await execa('npm', ['list', '--all'])
-  let packages = stdout.split('\n')
-  packages.splice(0, 1)//去掉首行路径字符串
-  packages = packages.filter(item => !item.includes('deduped')) // 去掉标记重复的包
-    .map(name => {
-      const nameRegex = /(\S+@.+)/g
-      const nameParse = name.match(nameRegex)
-      if (nameParse && nameParse.length > 0) return nameParse[0]
-      else return ''
-    }) // 解析每行的包名称
-    .filter(packageName => packageName.length > 0) // 去掉空行
-  return Array.from(new Set(packages)) // 去掉重复项
-  // return packages
+const getPackageInfos = async (packageManager) => {
+  if (packageManager === 'yarn') {
+    const fileData = readFileSync('./yarn.lock')
+    return fileData.toString().split(/\r?\n/)
+      .filter(line => line.startsWith('  resolved'))
+      .map(line => line.substring(12, line.length - 1))
+  }
+  else {
+    const { stdout } = await execa('npm', ['list', '--all'])
+    let packages = stdout.split('\n')
+    packages.splice(0, 1)//去掉首行路径字符串
+    packages = packages.filter(item => !item.includes('deduped')) // 去掉标记重复的包
+      .map(name => {
+        const nameRegex = /(\S+@.+)/g
+        const nameParse = name.match(nameRegex)
+        if (nameParse && nameParse.length > 0) return nameParse[0]
+        else return ''
+      }) // 解析每行的包名称
+      .filter(packageName => packageName.length > 0) // 去掉空行
+    return Array.from(new Set(packages)) // 去掉重复项
+  }
 }
 
 // 利用 npm pack 在外网上对 dependencies 中的所有包打包。
@@ -34,11 +42,30 @@ var index = 0
 const packPackage = async (packageName) => {
   const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
   index++
+  // console.log(`${index}: ${stdout}`)
   process.stdout.clearLine()
   process.stdout.cursorTo(0)
   process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度
   return stdout
 }
+
+const downloadPackage = async (packageUrl) => {
+  const urlObj = url.parse(packageUrl)
+  const filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
+  const fileStream = createWriteStream('./node_modules_pack/' + filename)
+  await fetch(packageUrl).then(res => {
+    res.body.pipe(fileStream)
+  })
+  fileStream.on('finish', () => {
+    fileStream.close()
+    index++
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    process.stdout.write(`${index}: ${filename}`) // 在同一行打印处理进度
+    return filename
+  })
+}
+
 
 // npm publish 会将解析打包的 package.json 中 publishConfig, 有的公共包如果设置了 { "registry": "https://registry.npmjs.org/" } , 会导致publish失败。
 const publishPackage = async (packageName) => {
@@ -75,12 +102,29 @@ program
   .command('pack')
   .description('Pack all installed package in ./node_modules')
   .action(() => {
-    getPackageNames().then(packages => {
-      console.log(`Total ${packages.length} packages to be packed, please wait...`)
-      mkdirSync('./node_modules_pack', { recursive: true })
-      for (const packageName of packages) {
-        packPackage(packageName)
-      }
+    const questions = [
+      {
+        type: 'list',
+        name: 'packageManager',
+        message: 'Please select your package manager:',
+        choices: ['yarn', 'npm'],
+        default: 'npm'
+      },
+    ]
+    inquirer.prompt(questions).then(options => {
+      getPackageInfos(options.packageManager).then(packages => {
+        console.log(`Total ${packages.length} packages to be packed, please wait...`)
+        mkdirSync('./node_modules_pack', { recursive: true })
+        if (options.packageManager === 'yarn') {
+          for (const packageUrl of packages) {
+            downloadPackage(packageUrl)
+          }
+        } else {
+          for (const packageName of packages) {
+            packPackage(packageName)
+          }
+        }
+      })
     })
   })
 
