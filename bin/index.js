@@ -53,11 +53,17 @@ const downloadPackage = async (packageUrl) => {
   const urlObj = url.parse(packageUrl)
   const filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
   const fileStream = createWriteStream('./node_modules_pack/' + filename)
+  let res
   try {
-    const res = await fetch(packageUrl)
-    if (!res.ok) {
-      throw new Error(`Failed to download package ${filename}: ${res.status} ${res.statusText}`)
-    }
+    res = await fetch(packageUrl)
+  } catch (error) {
+    console.error(`Failed to download package ${packageUrl}: ${error.message}`)
+    return filename
+  }
+  if (!res?.ok) {
+    console.error(`Failed to download package ${filename}: ${res.status} ${res.statusText}`)
+    return filename
+  } else {
     res.body.pipe(fileStream)
     await new Promise((resolve, reject) => {
       fileStream.on('finish', () => {
@@ -70,9 +76,6 @@ const downloadPackage = async (packageUrl) => {
       })
       fileStream.on('error', reject)
     })
-    return filename
-  } catch (error) {
-    console.error(`Failed to download package ${packageUrl}: ${error.message}`)
     return filename
   }
 }
