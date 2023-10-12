@@ -1,6 +1,6 @@
 {
   "name": "@fanwang/pack-util",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
   "bin": {
     "pack-util": "./bin/index.js"
@@ -13,7 +13,8 @@
   },
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "bumpp package.json bin/index.js"
   },
   "repository": {
     "type": "git",
@@ -32,5 +33,8 @@
     "form-data": "^4.0.0",
     "inquirer": "^9.1.3",
     "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "bumpp": "^9.2.0"
   }
 }

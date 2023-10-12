@@ -12,7 +12,7 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('2.0.1')
+  .version('2.0.2')
 
 const getPackageInfos = async (packageManager) => {
   if (packageManager === 'yarn') {
@@ -53,17 +53,28 @@ const downloadPackage = async (packageUrl) => {
   const urlObj = url.parse(packageUrl)
   const filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
   const fileStream = createWriteStream('./node_modules_pack/' + filename)
-  await fetch(packageUrl).then(res => {
+  try {
+    const res = await fetch(packageUrl)
+    if (!res.ok) {
+      throw new Error(`Failed to download package ${filename}: ${res.status} ${res.statusText}`)
+    }
     res.body.pipe(fileStream)
-  })
-  fileStream.on('finish', () => {
-    fileStream.close()
-    index++
-    process.stdout.clearLine()
-    process.stdout.cursorTo(0)
-    process.stdout.write(`${index}: ${filename}`) // 在同一行打印处理进度
+    await new Promise((resolve, reject) => {
+      fileStream.on('finish', () => {
+        fileStream.close()
+        index++
+        process.stdout.clearLine()
+        process.stdout.cursorTo(0)
+        process.stdout.write(`${index}: ${filename}`) // 在同一行打印处理进度
+        resolve(filename)
+      })
+      fileStream.on('error', reject)
+    })
     return filename
-  })
+  } catch (error) {
+    console.error(`Failed to download package ${packageUrl}: ${error.message}`)
+    return filename
+  }
 }
 
 
@@ -112,16 +123,16 @@ program
       },
     ]
     inquirer.prompt(questions).then(options => {
-      getPackageInfos(options.packageManager).then(packages => {
+      getPackageInfos(options.packageManager).then(async (packages) => {
         console.log(`Total ${packages.length} packages to be packed, please wait...`)
         mkdirSync('./node_modules_pack', { recursive: true })
         if (options.packageManager === 'yarn') {
           for (const packageUrl of packages) {
-            downloadPackage(packageUrl)
+            await downloadPackage(packageUrl)
           }
         } else {
           for (const packageName of packages) {
-            packPackage(packageName)
+            await packPackage(packageName)
           }
         }
       })
