@@ -12,7 +12,7 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('2.0.2')
+  .version('2.0.3')
 
 const getPackageInfos = async (packageManager) => {
   if (packageManager === 'yarn') {
