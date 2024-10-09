@@ -1,6 +1,6 @@
 # pack-util
 
-Pack all installed package in ./node_modules, and publish to Nexus hosted Registry. Support both `yarn` and `npm`.   
+Pack all installed package in ./node_modules, and publish to Nexus hosted Registry. Support `pnpm`/`yarn`/`npm`.   
 
 **English** | [中文](./README.md)  
 
