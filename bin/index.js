@@ -15,7 +15,7 @@ const program = new Command()
 program
   .name('pack-util')
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
-  .version('3.0.1')
+  .version('3.1.0')
 
 
 const limit = pLimit(10)
