@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 import { execa } from 'execa'
 import { mkdirSync, readdirSync, createReadStream, createWriteStream, readFileSync } from 'fs'
 import { Command } from 'commander'
@@ -6,6 +7,7 @@ import inquirer from 'inquirer'
 import FormData from 'form-data'
 import fetch from 'node-fetch'
 import url from 'url'
+import yaml from 'yaml'
 
 const program = new Command()
 
@@ -15,16 +17,25 @@ program
   .version('2.0.4')
 
 const getPackageInfos = async (packageManager) => {
+  // 使用 yarn
   if (packageManager === 'yarn') {
     const fileData = readFileSync('./yarn.lock')
     return fileData.toString().split(/\r?\n/)
       .filter(line => line.startsWith('  resolved'))
       .map(line => line.substring(12, line.length - 1))
   }
+  else if (packageManager === 'pnpm') {
+    const fileData = readFileSync('./pnpm-lock.yaml', 'utf8');
+    const pnpmLock = yaml.parse(fileData);
+    // 直接使用 `packages` 下的键作为包名和版本
+    const packages = Object.keys(pnpmLock.packages);
+    return Array.from(new Set(packages)); // 去掉重复项
+  }
+  // 使用 npm
   else {
     const { stdout } = await execa('npm', ['list', '--all'])
     let packages = stdout.split('\n')
-    packages.splice(0, 1)//去掉首行路径字符串
+    packages.splice(0, 1) //去掉首行路径字符串
     packages = packages.filter(item => !item.includes('deduped')) // 去掉标记重复的包
       .map(name => {
         const nameRegex = /(\S+@.+)/g
@@ -80,13 +91,6 @@ const downloadPackage = async (packageUrl) => {
   }
 }
 
-
-// npm publish 会将解析打包的 package.json 中 publishConfig, 有的公共包如果设置了 { "registry": "https://registry.npmjs.org/" } , 会导致publish失败。
-const publishPackage = async (packageName) => {
-  const { stdout } = await execa('npm', ['publish', './node_modules_pack/' + packageName])
-  return stdout
-}
-
 // 通过 nexus 的 components upload API 上传 npm 包，有时候会报 statusCode 500，暂不知道原因，重新上传即可。
 const uploadPackage = async (packageName, options) => {
   const { host, repository, username, password } = options
@@ -121,8 +125,8 @@ program
         type: 'list',
         name: 'packageManager',
         message: 'Please select your package manager:',
-        choices: ['yarn', 'npm'],
-        default: 'npm'
+        choices: ['pnpm', 'yarn', 'npm'],
+        default: 'pnpm'
       },
     ]
     inquirer.prompt(questions).then(options => {
@@ -179,15 +183,5 @@ program
       }
     })
   })
-
-// program
-//   .command('publish')
-//   .description('Publish all packed packages in ./node_modules_pack')
-//   .action(() => {
-//     const packages = readdirSync('./node_modules_pack')
-//     packages.forEach(packageName => {
-//       publishPackage(packageName).then(stdout => console.log(stdout))
-//     })
-//   })
 
 program.parse()
