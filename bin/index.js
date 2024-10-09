@@ -147,7 +147,7 @@ program
           )
           await Promise.all(packTasks)
         }
-        console.log('All packages are successfully packed in ./node_modules_pack !')
+        console.log('\nAll packages are successfully packed in ./node_modules_pack!')
       })
     })
   })
