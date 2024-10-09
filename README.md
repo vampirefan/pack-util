@@ -35,9 +35,10 @@ pack-util pack
 ```
 **解释：**
 工具是根据你使用的包管理工具来检索项目的所有依赖包。
-- pnpm: 根据 pnpm-lock.yaml 文件来检索
-- yarn: 根据 yarn.lock 文件来检索
-- npm: 根据 npm list --all 的输出来检索
+- pnpm: 根据 `pnpm-lock.yaml` 文件来检索
+- yarn: 根据 `yarn.lock` 文件来检索
+- npm: 根据 `npm list --all` 的输出来检索
+
 因此，如果单纯的想从互联网下载一些包，可以仅凭一个 package.json 文件，利用不同的包管理工具执行 install 得到相应的检索文件后，就可以执行 pack 操作了。甚至建立一个空文件夹，然后通过 `yarn add` | `pnpm add` | `npm install` 添加自己需要的包来直接得到检索文件，也是可以的。
 
 ### 第二步. 将依赖包批量上传到 nexus 搭建的 npm 私服上  
