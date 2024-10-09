@@ -51,18 +51,20 @@ const getPackageInfos = async (packageManager) => {
   }
 }
 
-// 利用 npm pack 在外网上对 dependencies 中的所有包打包。
-var index = 0
-const packPackage = async (packageName) => {
-  const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
-  index++
-  // console.log(`${index}: ${stdout}`)
-  process.stdout.clearLine()
-  process.stdout.cursorTo(0)
-  process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度
-  return stdout
-}
 
+var index = 0
+// 利用 npm pack 在外网上对 dependencies 中的所有包打包。
+// const packPackage = async (packageName) => {
+//   const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
+//   index++
+//   // console.log(`${index}: ${stdout}`)
+//   process.stdout.clearLine()
+//   process.stdout.cursorTo(0)
+//   process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度
+//   return stdout
+// }
+
+// 直接利用依赖包的下载地址进行下载
 const downloadPackage = async (packageUrl) => {
   const urlObj = url.parse(packageUrl)
   const filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
@@ -142,9 +144,16 @@ program
           )
           await Promise.all(downloadTasks)
         } else {
-          const packTasks = packages.map((packageName) =>
-            limit(() => packPackage(packageName))
-          )
+          const { stdout } = await execa('npm', ['config', 'get', 'registry'])
+          const registryUrl = stdout.endsWith('/') ? stdout : `${stdout}/`;
+          const packTasks = packages.map((packageName) => {
+            const atIndex = packageName.lastIndexOf('@')
+            const fullname = packageName.substring(0, atIndex)
+            const name = fullname.includes('/') ? fullname.split('/')[1] : fullname
+            const version = packageName.substring(atIndex + 1)
+            const packageUrl = `${registryUrl}${fullname}/-/${name}-${version}.tgz`;
+            return limit(() => downloadPackage(packageUrl))
+          })
           await Promise.all(packTasks)
         }
         console.log('\nAll packages are successfully packed in ./node_modules_pack!')
