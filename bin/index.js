@@ -8,6 +8,7 @@ import FormData from 'form-data'
 import fetch from 'node-fetch'
 import url from 'url'
 import yaml from 'yaml'
+import pLimit from 'p-limit'
 
 const program = new Command()
 
@@ -16,6 +17,8 @@ program
   .description('Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.')
   .version('2.0.4')
 
+
+const limit = pLimit(10)
 const getPackageInfos = async (packageManager) => {
   // 使用 yarn
   if (packageManager === 'yarn') {
@@ -25,11 +28,11 @@ const getPackageInfos = async (packageManager) => {
       .map(line => line.substring(12, line.length - 1))
   }
   else if (packageManager === 'pnpm') {
-    const fileData = readFileSync('./pnpm-lock.yaml', 'utf8');
-    const pnpmLock = yaml.parse(fileData);
+    const fileData = readFileSync('./pnpm-lock.yaml', 'utf8')
+    const pnpmLock = yaml.parse(fileData)
     // 直接使用 `packages` 下的键作为包名和版本
-    const packages = Object.keys(pnpmLock.packages);
-    return Array.from(new Set(packages)); // 去掉重复项
+    const packages = Object.keys(pnpmLock.packages)
+    return Array.from(new Set(packages)) // 去掉重复项
   }
   // 使用 npm
   else {
@@ -129,19 +132,22 @@ program
         default: 'pnpm'
       },
     ]
-    inquirer.prompt(questions).then(options => {
+    inquirer.prompt(questions).then((options) => {
       getPackageInfos(options.packageManager).then(async (packages) => {
         console.log(`Total ${packages.length} packages to be packed, please wait...`)
         mkdirSync('./node_modules_pack', { recursive: true })
         if (options.packageManager === 'yarn') {
-          for (const packageUrl of packages) {
-            await downloadPackage(packageUrl)
-          }
+          const downloadTasks = packages.map((packageUrl) =>
+            limit(() => downloadPackage(packageUrl))
+          )
+          await Promise.all(downloadTasks)
         } else {
-          for (const packageName of packages) {
-            await packPackage(packageName)
-          }
+          const packTasks = packages.map((packageName) =>
+            limit(() => packPackage(packageName))
+          )
+          await Promise.all(packTasks)
         }
+        console.log('All packages are successfully packed in ./node_modules_pack !')
       })
     })
   })
