@@ -36,15 +36,16 @@ async function getPackageInfos(packageManager) {
       acc.add(key)
       if (pkg.peerDependencies) {
         Object.keys(pkg.peerDependencies).forEach((peer) => {
-          const peerVersion = pkg.peerDependencies[peer]
+          let peerVersion = pkg.peerDependencies[peer]
+          if (peerVersion.includes('>='))
+            peerVersion = '*'
           // 只匹配版本号
           const versionRegex = /(\d+\.\d+\.\d+)/
           const versionMatch = peerVersion.match(versionRegex)
-          if (versionMatch && versionMatch[1]) {
-            const exactVersion = versionMatch[1]
-            const peerPackageKey = `${peer}@${exactVersion}`
-            acc.add(peerPackageKey)
-          }
+          if (versionMatch && versionMatch[1])
+            acc.add(`${peer}@${versionMatch[1]}`)
+          else
+            acc.add(`${peer}@*`)
         })
       }
       return acc
@@ -71,15 +72,21 @@ async function getPackageInfos(packageManager) {
 
 let index = 0
 // 利用 npm pack 在外网上对 dependencies 中的所有包打包。
-// const packPackage = async (packageName) => {
-//   const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
-//   index++
-//   // console.log(`${index}: ${stdout}`)
-//   process.stdout.clearLine()
-//   process.stdout.cursorTo(0)
-//   process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度
-//   return stdout
-// }
+async function packPackage(packageName) {
+  try {
+    const { stdout } = await execa('npm', ['pack', packageName, '--pack-destination=./node_modules_pack'])
+    index++
+    // console.log(`${index}: ${stdout}`)
+    process.stdout.clearLine()
+    process.stdout.cursorTo(0)
+    process.stdout.write(`${index}: ${stdout}`) // 在同一行打印处理进度
+    return stdout
+  }
+  catch (error) {
+    console.error(`\nWARN: Failed to pack package ${packageName}: ${error.message}`)
+    return packageName
+  }
+}
 
 // 直接利用依赖包的下载地址进行下载
 async function downloadPackage(packageUrl) {
@@ -175,8 +182,13 @@ program
             const fullname = packageName.substring(0, atIndex)
             const name = fullname.includes('/') ? fullname.split('/')[1] : fullname
             const version = packageName.substring(atIndex + 1)
-            const packageUrl = `${registryUrl}${fullname}/-/${name}-${version}.tgz`
-            return limit(() => downloadPackage(packageUrl))
+            if (version === '*') {
+              return limit(() => packPackage(fullname))
+            }
+            else {
+              const packageUrl = `${registryUrl}${fullname}/-/${name}-${version}.tgz`
+              return limit(() => downloadPackage(packageUrl))
+            }
           })
           await Promise.all(packTasks)
         }
