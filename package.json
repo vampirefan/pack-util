@@ -38,6 +38,7 @@
     "yaml": "^2.5.1"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.7.3",
     "bumpp": "^9.6.1",
     "czg": "^1.10.1",
     "taze": "^0.17.2"
