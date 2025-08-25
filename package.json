@@ -1,7 +1,7 @@
 {
   "name": "@fanwang/pack-util",
   "type": "module",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
   "author": "fanwang",
   "license": "MIT",
