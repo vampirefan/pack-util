@@ -1,22 +1,10 @@
 {
   "name": "@fanwang/pack-util",
+  "type": "module",
   "version": "3.2.1",
   "description": "Pack all installed package in ./node_modules, and publish to Nexus self-hosted Registry.",
-  "bin": {
-    "pack-util": "./bin/index.js"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "engines": {
-    "node": ">= 16.17.0"
-  },
-  "type": "module",
-  "scripts": {
-    "test": "node bin/index.js pack",
-    "commit": "git add . && czg && git push",
-    "release": "bumpp package.json bin/index.js"
-  },
+  "author": "fanwang",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/vampirefan/pack-util.git"
@@ -26,8 +14,20 @@
     "pack",
     "publish"
   ],
-  "author": "fanwang",
-  "license": "MIT",
+  "bin": {
+    "pack-util": "./bin/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">= 16.17.0"
+  },
+  "scripts": {
+    "test": "node bin/index.js pack",
+    "commit": "git add . && czg && git push",
+    "release": "bumpp package.json bin/index.js"
+  },
   "dependencies": {
     "commander": "9.5.0",
     "execa": "9.4.0",
