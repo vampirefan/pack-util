@@ -91,7 +91,14 @@ async function packPackage(packageName) {
 // 直接利用依赖包的下载地址进行下载
 async function downloadPackage(packageUrl) {
   const urlObj = new url.URL(packageUrl)
-  const filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
+  let filename = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1)
+
+  // 使用正则表达式提取命名空间，并添加在文件名前面
+  const namespaceMatch = urlObj.pathname.match(/@([^/]+)/)
+  if (namespaceMatch) {
+    filename = `${namespaceMatch[1]}-${filename}`
+  }
+
   const fileStream = createWriteStream(`./node_modules_pack/${filename}`)
   let res
   try {
